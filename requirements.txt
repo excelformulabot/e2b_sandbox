@@ -1,0 +1,5 @@
+fastapi
+uvicorn
+e2b_code_interpreter==1.0.5
+httpx
+python-dotenv
