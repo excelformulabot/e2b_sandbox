@@ -4,3 +4,4 @@ e2b_code_interpreter==1.0.5
 httpx
 python-dotenv
 Requests==2.32.3
+boto3==1.35.97
