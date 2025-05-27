@@ -52,8 +52,8 @@ uploaded_pngs = set()
 @app.post("/execute-code")
 async def execute_code(data: CodeExecutionRequest):
     try:
-        sandbox = Sandbox.connect(data.sandbox_id) if data.sandbox_id else Sandbox()
-        sandbox.set_timeout(600)
+        sandbox = Sandbox.connect(data.sandbox_id)
+        sandbox.set_timeout(6000)
 
         result = sandbox.run_code(data.code)
 
