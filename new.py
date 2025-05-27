@@ -44,7 +44,7 @@ class CodeExecutionRequest(BaseModel):
 
 @app.post("/create-sandbox")
 async def create_sandbox():
-    sbx = Sandbox()
+    sandbox = Sandbox("fpf5qidy9oxvkqr5npe7")
     return {"sandbox_id": sbx.sandbox_id}
 
 uploaded_pngs = set()
