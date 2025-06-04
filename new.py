@@ -44,8 +44,8 @@ class CodeExecutionRequest(BaseModel):
 
 @app.post("/create-sandbox")
 async def create_sandbox():
-    sandbox = Sandbox("fpf5qidy9oxvkqr5npe7")
-    return {"sandbox_id": sandbox.sandbox_id}
+    sbx = Sandbox()
+    return {"sandbox_id": sbx.sandbox_id}
 
 uploaded_pngs = set()
 
@@ -89,7 +89,11 @@ async def execute_code(data: CodeExecutionRequest):
 
                 s3_url = upload_to_s3_direct(content, os.path.basename(file.path), bucket_name, '')
                 if s3_url:
-                    markdown_images.append(f"\n📄 [{file.name}]({s3_url})")
+                    if file.name.endswith(".csv"):
+                        markdown_images.append(f"\n📄 [Download {file.name}]({s3_url})")  # Make it clear it's downloadable
+                    else:
+                        markdown_images.append(f"![]({s3_url})" if file.name.endswith(".png") else f"\n📄 [{file.name}]({s3_url})")
+
             except Exception as e:
                 print(f"⚠️ Failed to upload {file.name}: {e}")
 
