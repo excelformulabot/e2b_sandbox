@@ -81,20 +81,20 @@ async def execute_code(data: CodeExecutionRequest):
         for file in uploaded_files:
             if file.name.endswith(".png") and file.name in uploaded_pngs:
                 continue  # Already handled above
+try:
+    content = sandbox.files.read(file.path)
+    if isinstance(content, str):
+        content = content.encode()
 
-            try:
-                content = sandbox.files.read(file.path)
-                if isinstance(content, str):
-                    content = content.encode()
+    s3_url = upload_to_s3_direct(content, os.path.basename(file.path), bucket_name, '')
+    if s3_url:
+        if file.name.endswith(".csv"):
+            markdown_images.append(
+                f"{file.name} download link:\n{s3_url}"
+            )
+        else:
+            markdown_images.append(f"![]({s3_url})" if file.name.endswith(".png") else f"\n📄 [{file.name}]({s3_url})")
 
-                s3_url = upload_to_s3_direct(content, os.path.basename(file.path), bucket_name, '')
-                if s3_url:
-                    if file.name.endswith(".csv"):
-                        markdown_images.append(
-                            f"{file.name} download link:\n{s3_url}\n\nLet me know if you need any further modifications!"
-                        )
-                    else:
-                        markdown_images.append(f"![]({s3_url})" if file.name.endswith(".png") else f"\n📄 [{file.name}]({s3_url})")
 
             except Exception as e:
                 print(f"⚠️ Failed to upload {file.name}: {e}")
