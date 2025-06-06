@@ -7,7 +7,6 @@ import boto3
 from io import BytesIO
 
 # S3 setup (fill these with your actual values)
-
 bucket_name = "code-interpreter-s3"
 region = "us-east-2"
 bucket_url = f"https://{bucket_name}.s3.{region}.amazonaws.com/"
@@ -35,8 +34,6 @@ def upload_to_s3_direct(content: bytes, file_name: str, bucket_name: str, s3_fol
     except Exception as e:
         print(f"❌ Upload failed: {e}")
         return None
-
-
 
 class CodeExecutionRequest(BaseModel):
     code: str
@@ -81,22 +78,22 @@ async def execute_code(data: CodeExecutionRequest):
         for file in uploaded_files:
             if file.name.endswith(".png") and file.name in uploaded_pngs:
                 continue  # Already handled above
-try:
-    content = sandbox.files.read(file.path)
-    if isinstance(content, str):
-        content = content.encode()
 
-    s3_url = upload_to_s3_direct(content, os.path.basename(file.path), bucket_name, '')
-    if s3_url:
-        if file.name.endswith(".csv"):
-            markdown_images.append(f"{file.name} download link:\n{s3_url}")
-        else:
-            markdown_images.append(
-                f"![]({s3_url})" if file.name.endswith(".png") else f"\n📄 [{file.name}]({s3_url})"
-            )
-except Exception as e:
-    print(f"Error handling file upload: {e}")
+            try:
+                content = sandbox.files.read(file.path)
+                if isinstance(content, str):
+                    content = content.encode()
 
+                s3_url = upload_to_s3_direct(content, os.path.basename(file.path), bucket_name, '')
+                if s3_url:
+                    if file.name.endswith(".csv"):
+                        markdown_images.append(f"{file.name} download link:\n{s3_url}\n\nLet me know if you need any further modifications!")
+                    else:
+                        markdown_images.append(
+                            f"![]({s3_url})" if file.name.endswith(".png") else f"\n📄 [{file.name}]({s3_url})"
+                        )
+            except Exception as e:
+                print(f"Error handling file upload: {e}")
 
         final_output = stdout + "\n" + "\n".join(markdown_images)
 
