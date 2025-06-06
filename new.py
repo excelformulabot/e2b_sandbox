@@ -89,15 +89,14 @@ try:
     s3_url = upload_to_s3_direct(content, os.path.basename(file.path), bucket_name, '')
     if s3_url:
         if file.name.endswith(".csv"):
-            markdown_images.append(
-                f"{file.name} download link:\n{s3_url}"
-            )
+            markdown_images.append(f"{file.name} download link:\n{s3_url}")
         else:
-            markdown_images.append(f"![]({s3_url})" if file.name.endswith(".png") else f"\n📄 [{file.name}]({s3_url})")
+            markdown_images.append(
+                f"![]({s3_url})" if file.name.endswith(".png") else f"\n📄 [{file.name}]({s3_url})"
+            )
+except Exception as e:
+    print(f"Error handling file upload: {e}")
 
-
-            except Exception as e:
-                print(f"⚠️ Failed to upload {file.name}: {e}")
 
         final_output = stdout + "\n" + "\n".join(markdown_images)
 
