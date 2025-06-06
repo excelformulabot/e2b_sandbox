@@ -87,7 +87,7 @@ async def execute_code(data: CodeExecutionRequest):
                 s3_url = upload_to_s3_direct(content, os.path.basename(file.path), bucket_name, '')
                 if s3_url:
                     if file.name.endswith(".csv"):
-                        markdown_images.append(f"{file.name} download link:\n{s3_url}\n\nLet me know if you need any further modifications!")
+                        markdown_images.append(f"{file.name} download link:\n{s3_url}")
                     else:
                         markdown_images.append(
                             f"![]({s3_url})" if file.name.endswith(".png") else f"\n📄 [{file.name}]({s3_url})"
