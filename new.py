@@ -95,7 +95,7 @@ async def execute_code(data: CodeExecutionRequest):
             except Exception as e:
                 print(f"Error handling file upload: {e}")
 
-        final_output = stdout + "\n" + "\n".join(markdown_images)
+        final_output = stdout 
 
         return {
             "sandbox_id": sandbox.sandbox_id,
