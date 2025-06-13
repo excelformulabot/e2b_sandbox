@@ -99,6 +99,7 @@ async def execute_code(data: CodeExecutionRequest):
                         markdown_images.append(f"![]({s3_url})" if file.name.endswith(".png") else f"\n📄 [{file.name}]({s3_url})")
 
                     # ✅ Delete file from sandbox after successful upload
+                    print(f"File path to be deleted {file.path}")
                     delete_code = f"import os\nos.remove('{file.path}')"
                     try:
                         sandbox.run_code(delete_code)
