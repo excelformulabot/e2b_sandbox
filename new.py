@@ -4,6 +4,7 @@ from e2b_code_interpreter import Sandbox
 import os
 import requests
 import boto3
+import datetime
 from io import BytesIO
 
 # S3 setup (fill these with your actual values)
@@ -67,7 +68,13 @@ async def execute_code(data: CodeExecutionRequest):
             if hasattr(res, "png") and res.png:
                 try:
                     png_bytes = base64.b64decode(res.png)
-                    file_name = f"plot{idx+1}.png"
+                    chart_title = getattr(getattr(res, "chart", None), "title", None)
+                    safe_title = (
+                        chart_title.replace(" ", "_").replace("/", "_") if chart_title else f"plot{idx+1}"
+                    )
+
+                    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+                    file_name = f"{safe_title}_{timestamp}.png"
                     s3_url = upload_to_s3_direct(png_bytes, file_name, bucket_name)
                     uploaded_pngs.add(file_name)  
                     if s3_url:
