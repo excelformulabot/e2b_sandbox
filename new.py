@@ -22,7 +22,7 @@ def upload_to_s3_direct(content: bytes, file_name: str, bucket_name: str, s3_fol
         aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
         aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
     )
-    s3_key = f"{s3_folder}/{file_name}"
+    s3_key = f"{s3_folder}/{file_name}" if s3_folder else file_name
 
     try:
         s3_client.put_object(
