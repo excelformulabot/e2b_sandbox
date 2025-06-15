@@ -6,6 +6,8 @@ import requests
 import boto3
 import datetime
 from io import BytesIO
+import asyncio
+
 
 # S3 setup (fill these with your actual values)
 
@@ -22,7 +24,7 @@ def upload_to_s3_direct(content: bytes, file_name: str, bucket_name: str, s3_fol
         aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
         aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
     )
-    s3_key = f"{s3_folder}/{file_name}" if s3_folder else file_name
+    s3_key = f"{s3_folder}/{file_name}"
 
     try:
         s3_client.put_object(
@@ -55,7 +57,8 @@ async def execute_code(data: CodeExecutionRequest):
         sandbox = Sandbox.connect(data.sandbox_id)
         sandbox.set_timeout(6000)
 
-        result = sandbox.run_code(data.code)
+        # result = sandbox.run_code(data.code)  # ❌ blocking
+        result = await asyncio.to_thread(sandbox.run_code, data.code)  # ✅ non-blocking
 
         import base64
 
@@ -109,7 +112,7 @@ async def execute_code(data: CodeExecutionRequest):
                     print(f"File path to be deleted {file.path}")
                     delete_code = f"import os\nos.remove('{file.path}')"
                     try:
-                        sandbox.run_code(delete_code)
+                        await asyncio.to_thread(sandbox.run_code, delete_code)
                         print(f"🗑️ Deleted {file.path} from sandbox")
                     except Exception as e:
                         print(f"⚠️ Failed to delete {file.path}: {e}")
@@ -133,5 +136,3 @@ async def execute_code(data: CodeExecutionRequest):
     except Exception as e:
         return {"error": str(e)}
 
-
-# uvicorn new:app --reload --port 5006
