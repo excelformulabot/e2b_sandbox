@@ -50,9 +50,10 @@ async def create_sandbox():
     sbx = Sandbox()
     return {"sandbox_id": sbx.sandbox_id}
 
-uploaded_pngs = set()
+
 @app.post("/execute-code")
 async def execute_code(data: CodeExecutionRequest):
+    uploaded_pngs = set()
     try:
         sandbox = Sandbox.connect(data.sandbox_id)
         sandbox.set_timeout(6000)
@@ -136,3 +137,6 @@ async def execute_code(data: CodeExecutionRequest):
     except Exception as e:
         return {"error": str(e)}
 
+
+# uvicorn new:app --reload --port 5006
+# gunicorn new:app -k uvicorn.workers.UvicornWorker --workers 4 --threads 4 --timeout 600
