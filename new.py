@@ -80,7 +80,7 @@ async def execute_code(data: CodeExecutionRequest):
                 filename = os.path.basename(file.path)
                 if isinstance(content, str):
                     content = content.encode()
-                url = await upload_to_s3_direct_async(content, filename, bucket_name, '')
+                url = await upload_to_s3_direct_async(content, filename, bucket_name, 'code')
                 if url:
                     uploaded_file_urls.append(url)
                 delete_code = f"import os\nos.remove('{file.path}')"
