@@ -39,7 +39,7 @@ async def create_sandbox():
 async def execute_code(req: CodeExecutionRequest):
     urls, seen = [], set()                              # seen = {sha256}
 
-    sb = Sandbox.connect(req.sandbox_id)
+    sb = await Sandbox.connect(req.sandbox_id)
     sb.set_timeout(6000)
     result = await asyncio.to_thread(sb.run_code, req.code)
 
