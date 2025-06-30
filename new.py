@@ -19,11 +19,11 @@ async def upload_s3(buf: bytes, key: str) -> str:
     mime, _ = mimetypes.guess_type(key)
     s3.put_object(
         Bucket=BUCKET,
-        Key=f"code/{key}",
+        Key=f"david/{key}",
         Body=buf,
         ContentType=mime or "application/octet-stream",
     )
-    return f"https://{BUCKET}.s3.{REGION}.amazonaws.com/code/{key}"
+    return f"https://{BUCKET}.s3.{REGION}.amazonaws.com/david/{key}"
 
 # ---------- request model ----------
 class CodeExecutionRequest(BaseModel):
