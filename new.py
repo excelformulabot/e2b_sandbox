@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from e2b_code_interpreter import Sandbox
 import boto3, datetime, asyncio, mimetypes, hashlib, base64
 
-BUCKET, REGION = "excel-formulabot-rds", "us-east-2"
+BUCKET, REGION = "excel-formulabot-rds-storage", "us-east-2"
 
 app = FastAPI()
 s3 = boto3.client("s3", region_name=REGION)
