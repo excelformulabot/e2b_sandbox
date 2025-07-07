@@ -86,7 +86,7 @@ async def execute_code(req: CodeExecutionRequest):
             raise RuntimeError(f"{f.name} corrupted (not ZIP)")
 
         # >>> Update this line to use a unique file name
-        unique_name = f"{f.name}_{req.user_id}_{timestamp}"
+        unique_name = f"{req.user_id}_{timestamp}_{f.name}"
         urls.append(await upload_s3(raw, unique_name))
         seen.add(sig)
 
