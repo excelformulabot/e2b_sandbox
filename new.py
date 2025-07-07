@@ -29,6 +29,7 @@ async def upload_s3(buf: bytes, key: str) -> str:
 class CodeExecutionRequest(BaseModel):
     code: str
     sandbox_id: str | None = None
+    user_id: str
 
 # ---------- routes ----------
 import os
@@ -63,27 +64,30 @@ async def create_sandbox():
     # Step 5: Return sandbox ID
     return {"sandbox_id": sandbox_id}
 
-
 @app.post("/execute-code")
 async def execute_code(req: CodeExecutionRequest):
-    urls, seen = [], set()                              # seen = {sha256}
+    urls, seen = [], set()  # seen = {sha256}
 
     sb = Sandbox.connect(req.sandbox_id)
     sb.set_timeout(6000)
     result = await asyncio.to_thread(sb.run_code, req.code)
 
+    timestamp = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
+
     # ---------- scan /code and upload every artifact ----------
     for f in await asyncio.to_thread(sb.files.list, "/code"):
         raw = await asyncio.to_thread(sb.files.read, f.path, format="bytes")
         sig = sha(raw)
-        if sig in seen:                                 # skip exact duplicates
+        if sig in seen:  # skip exact duplicates
             continue
 
         # sanity-check Excel files (ZIP magic)
         if f.name.endswith((".xls", ".xlsx")) and not raw.startswith(b"PK\x03\x04"):
             raise RuntimeError(f"{f.name} corrupted (not ZIP)")
 
-        urls.append(await upload_s3(raw, f.name))
+        # >>> Update this line to use a unique file name
+        unique_name = f"{req.user_id}_{timestamp}_{f.name}"
+        urls.append(await upload_s3(raw, unique_name))
         seen.add(sig)
 
         # optional cleanup inside sandbox
