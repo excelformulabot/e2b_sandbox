@@ -1,7 +1,7 @@
 fastapi
 uvicorn[standard]
 gunicorn
-e2b_code_interpreter==1.0.5
+e2b_code_interpreter==1.2.0b5
 httpx
 python-dotenv
 requests==2.32.3
