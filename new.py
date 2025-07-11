@@ -23,7 +23,7 @@ async def upload_s3(buf: bytes, key: str) -> str:
         Body=buf,
         ContentType=mime or "application/octet-stream",
     )
-    return f"https://{BUCKET}.{REGION}.s3.amazonaws.com/code/{key}"
+    return f"https://{BUCKET}.s3.{REGION}.amazonaws.com/code/{key}"
 
 # ---------- request model ----------
 class CodeExecutionRequest(BaseModel):
