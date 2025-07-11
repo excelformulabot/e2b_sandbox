@@ -42,7 +42,7 @@ async def create_sandbox():
 
     # Step 2: Connect to sandbox and set timeout
     sb_connected = Sandbox.connect(sandbox_id)
-    sb_connected.set_timeout(6000)
+    sb_connected.set_timeout(3600)
 
     # Step 3: Safely inject credentials from Render env into the sandbox
     access_key = os.getenv("AWS_ACCESS_KEY_ID")
