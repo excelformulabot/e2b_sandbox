@@ -33,16 +33,20 @@ class CodeExecutionRequest(BaseModel):
     sandbox_id: str | None = None
     user_id: str
 
+
+class CreateSandboxRequest(BaseModel):
+    template_id: str
+
 import os
 @app.post("/create-sandbox")
-async def create_sandbox():
+async def create_sandbox(req: CreateSandboxRequest):
     # Step 1: Create sandbox
-    sb = Sandbox()
+    sb = Sandbox(req.template_id)
     sandbox_id = sb.sandbox_id
 
     # Step 2: Connect to sandbox and set timeout
     sb_connected = Sandbox.connect(sandbox_id)
-    sb_connected.set_timeout(3600)
+    sb_connected.set_timeout(6000)
 
     # Step 3: Safely inject credentials from Render env into the sandbox
     access_key = os.getenv("AWS_ACCESS_KEY_ID")
@@ -72,64 +76,14 @@ from e2b.exceptions import SandboxException  # ✅ correct exception
 import asyncio, datetime
 from typing import Optional
 
-# ---------- sandbox connection helper ----------
-from e2b_code_interpreter import Sandbox
-from e2b.exceptions import SandboxException
-
-def try_connect_or_resume(sandbox_id: Optional[str]) -> Sandbox:
-    print("In try_connect_or_resume ")
-    if not sandbox_id:
-        # No ID provided, create new sandbox
-        sb = Sandbox()
-        print(f"🆕 Created new sandbox: {sb.sandbox_id}")
-        return sb
-
-    try:
-        sb = Sandbox.connect(sandbox_id)
-        print(f"✅ Connected to sandbox {sandbox_id}")
-        return sb
-    except SandboxException as e:
-        print(f"⚠️ Connect failed: {e}. Trying resume...")
-        try:
-            sb = Sandbox.resume(sandbox_id)
-            print(f"🔄 Resumed sandbox {sandbox_id}")
-            return sb
-        except SandboxException as resume_err:
-            print(f"❌ Resume failed: {resume_err}. Creating new sandbox.")
-            sb = Sandbox()
-            print(f"🆕 Created new sandbox: {sb.sandbox_id}")
-            return sb
-
-
-
 # ---------- main route ----------
 @app.post("/execute-code")
 async def execute_code(req: CodeExecutionRequest):
-    urls, seen = [], set()
-    print("In execute_code")
-    sb = try_connect_or_resume(req.sandbox_id)
-    print(f"In execute_code Again with sb : {sb}")
-    req.sandbox_id = sb.sandbox_id  # refresh if new sandbox was created
+    urls, seen = [], set()  # seen = {sha256}
 
-    # Step 1: Try running the code
-    try:
-        print("In execute_code try block")
-        sb.set_timeout(6000)
-        print("In execute_code and set timeout is done")
-        result = await asyncio.to_thread(sb.run_code, req.code)
-        print(f"In execute_code and code ran succesfully in try block {result}")
-    except SandboxException as e:
-        # Attempt to resume if first run failed
-        print(f"In execute_code in except block")
-        print(f"🔁 First attempt failed: {e}")
-        try:
-            sb = Sandbox.resume(req.sandbox_id)
-            print(f"In execute_code and resume done {sb}")
-            req.sandbox_id = sb.sandbox_id
-            result = await asyncio.to_thread(sb.run_code, req.code)
-            print(f"In execute_code and ran code in except {result}")
-        except SandboxException as e2:
-            raise HTTPException(status_code=500, detail=f"Sandbox failed: {str(e2)}")
+    sb = Sandbox.connect(req.sandbox_id)
+    sb.set_timeout(6000)
+    result = await asyncio.to_thread(sb.run_code, req.code)
 
     timestamp = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
 
