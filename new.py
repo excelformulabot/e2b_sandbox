@@ -41,7 +41,7 @@ import os
 @app.post("/create-sandbox")
 async def create_sandbox(req: CreateSandboxRequest):
     # Step 1: Create sandbox
-    sb = Sandbox(req.template_id)
+    sb = Sandbox(req.template_id, timeout=300)
     sandbox_id = sb.sandbox_id
 
     # Step 2: Connect to sandbox and set timeout
