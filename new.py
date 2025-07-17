@@ -45,25 +45,25 @@ async def create_sandbox(req: CreateSandboxRequest):
     sandbox_id = sb.sandbox_id
 
     # Step 2: Connect to sandbox and set timeout
-    sb_connected = Sandbox.connect(sandbox_id)
-    # sb_connected.set_timeout(6000)
+    # sb_connected = Sandbox.connect(sandbox_id)
+    # # sb_connected.set_timeout(6000)
 
-    # Step 3: Safely inject credentials from Render env into the sandbox
-    access_key = os.getenv("AWS_ACCESS_KEY_ID")
-    secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+    # # Step 3: Safely inject credentials from Render env into the sandbox
+    # access_key = os.getenv("AWS_ACCESS_KEY_ID")
+    # secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 
-    setup_code = f"""
-    !pip install fsspec s3fs
+    # setup_code = f"""
+    # !pip install fsspec s3fs
     
-    import os
-    os.environ['AWS_ACCESS_KEY_ID'] = '{access_key}'
-    os.environ['AWS_SECRET_ACCESS_KEY'] = '{secret_key}'
+    # import os
+    # os.environ['AWS_ACCESS_KEY_ID'] = '{access_key}'
+    # os.environ['AWS_SECRET_ACCESS_KEY'] = '{secret_key}'
     
-    print("Environment ready: fsspec + s3fs installed, AWS credentials set.")
-    """
+    # print("Environment ready: fsspec + s3fs installed, AWS credentials set.")
+    # """
 
-    # Step 4: Run setup code in the new sandbox
-    await asyncio.to_thread(sb_connected.run_code, setup_code)
+    # # Step 4: Run setup code in the new sandbox
+    # await asyncio.to_thread(sb_connected.run_code, setup_code)
 
     # Step 5: Return sandbox ID
     return {"sandbox_id": sandbox_id}
