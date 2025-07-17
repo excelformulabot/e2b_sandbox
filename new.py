@@ -64,7 +64,7 @@ async def create_sandbox(req: CreateSandboxRequest):
     """
 
     # Step 4: Run setup code in the new sandbox
-    await asyncio.to_thread(sb_connected.run_code, setup_code)
+    # await asyncio.to_thread(sb_connected.run_code, setup_code)
 
     # Step 5: Return sandbox ID
     return {"sandbox_id": sandbox_id}
