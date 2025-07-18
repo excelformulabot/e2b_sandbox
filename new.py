@@ -45,7 +45,7 @@ async def create_sandbox(req: CreateSandboxRequest):
     sb_connected = Sandbox.connect(sb.sandbox_id)
     sandbox_id = sb.sandbox_id
 
-    await asyncio.sleep(7)
+    await asyncio.sleep(10)
     
     # Step 2: Connect to sandbox and set timeout
     # sb_connected = Sandbox.connect(sandbox_id)
@@ -66,7 +66,7 @@ async def create_sandbox(req: CreateSandboxRequest):
     """
 
     # Step 4: Run setup code in the new sandbox
-    await asyncio.to_thread(sb.run_code, setup_code)
+    # await asyncio.to_thread(sb.run_code, setup_code)
 
     # Step 5: Return sandbox ID
     return {"sandbox_id": sandbox_id}
