@@ -101,11 +101,21 @@ async def execute_code(req: CodeExecutionRequest):
             }
         }
 
+    print(f"Execution Done for sandbox {req.sandbox_id} and we got no errors while executing the code and now will check if some files were generated!")
+
 
     timestamp = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
 
     # Step 2: List and upload files in /code
     try:
+        file_list = await asyncio.to_thread(sb.files.list, "/code")
+        print(f"File generated in the code are below for sandbox {req.sandbox_id} ")
+        # 🔍 Print file sizes
+        for f in file_list:
+            size_mb = f.size / (1024 * 1024)
+            print(f"📁 {f.path} - {round(size_mb, 2)} MB")
+        print(f"File generated in the code are above for sandbox {req.sandbox_id}")
+            
         for f in await asyncio.to_thread(sb.files.list, "/code"):
             raw = await asyncio.to_thread(sb.files.read, f.path, format="bytes")
             sig = sha(raw)
