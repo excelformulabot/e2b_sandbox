@@ -80,12 +80,14 @@ from typing import Optional
 # ---------- main route ----------
 @app.post("/execute-code")
 async def execute_code(req: CodeExecutionRequest):
+    
     urls, seen = [], set()  # seen = {sha256}
 
     sb = Sandbox.connect(req.sandbox_id)
     sb.set_timeout(6000)
     # Step 1: Run the user's code
     try:
+        print(f"Execution started for sandbox {req.sandbox_id}")
         result = await asyncio.to_thread(sb.run_code, req.code)
     except Exception as e:
         # If the code crashes during execution (not sandbox itself), capture here
