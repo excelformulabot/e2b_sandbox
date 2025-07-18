@@ -31,7 +31,7 @@ async def upload_s3(buf: bytes, key: str) -> str:
 class CodeExecutionRequest(BaseModel):
     code: str
     sandbox_id: str | None = None
-    user_id: str
+    # user_id: str
 
 
 class CreateSandboxRequest(BaseModel):
@@ -44,8 +44,6 @@ async def create_sandbox(req: CreateSandboxRequest):
     sb = Sandbox(req.template_id, timeout=300)
     sb_connected = Sandbox.connect(sb.sandbox_id)
     sandbox_id = sb.sandbox_id
-
-    # await asyncio.sleep(10)
     
     # Step 2: Connect to sandbox and set timeout
     # sb_connected = Sandbox.connect(sandbox_id)
@@ -62,6 +60,8 @@ async def create_sandbox(req: CreateSandboxRequest):
     
     print("Environment ready: fsspec + s3fs installed, AWS credentials set.")
     """
+
+    print("Executed code as well")
 
     # Step 4: Run setup code in the new sandbox
     await asyncio.to_thread(sb.run_code, setup_code)
@@ -80,17 +80,16 @@ from typing import Optional
 # ---------- main route ----------
 @app.post("/execute-code")
 async def execute_code(req: CodeExecutionRequest):
-    
-    urls, seen = [], set()  # seen = {sha256}
+    urls, seen = set(), set()
 
     sb = Sandbox.connect(req.sandbox_id)
     sb.set_timeout(6000)
+
     # Step 1: Run the user's code
     try:
         print(f"Execution started for sandbox {req.sandbox_id}")
         result = await asyncio.to_thread(sb.run_code, req.code)
     except Exception as e:
-        # If the code crashes during execution (not sandbox itself), capture here
         return {
             "sandbox_id": req.sandbox_id,
             "stdout": "",
@@ -103,40 +102,45 @@ async def execute_code(req: CodeExecutionRequest):
             }
         }
 
-    print(f"Execution Done for sandbox {req.sandbox_id} and we got no errors while executing the code and now will check if some files were generated!")
-
+    print(f"Execution done for sandbox {req.sandbox_id}. Checking for generated files...")
 
     timestamp = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
 
-    # Step 2: List and upload files in /code
     try:
         file_list = await asyncio.to_thread(sb.files.list, "/code")
-        print(f"File generated in the code are below for sandbox {req.sandbox_id} ")
-        # 🔍 Print file sizes
+        print(f"Files generated in the code folder for sandbox {req.sandbox_id}:")
         for f in file_list:
-            size_mb = f.size / (1024 * 1024)
-            print(f"📁 {f.path} - {round(size_mb, 2)} MB")
-        print(f"File generated in the code are above for sandbox {req.sandbox_id}")
-            
-        for f in await asyncio.to_thread(sb.files.list, "/code"):
-            raw = await asyncio.to_thread(sb.files.read, f.path, format="bytes")
-            sig = sha(raw)
-            if sig in seen:
-                continue
-            if f.name.endswith((".xls", ".xlsx")) and not raw.startswith(b"PK\x03\x04"):
-                raise RuntimeError(f"{f.name} corrupted (not ZIP)")
+            # size_mb = f.size / (1024 * 1024)
+            print(f"📁 {f.path}")
+        print(f"End of file list for sandbox {req.sandbox_id}")
 
-            # user_id is optional — fallback to "user" if not present
+        for f in file_list:
+
+            # Basic integrity check for Excel files
+            if f.name.endswith((".xls", ".xlsx")):
+                header = await asyncio.to_thread(sb.files.read, f.path, format="bytes")
+                if not header.startswith(b"PK\x03\x04"):
+                    raise RuntimeError(f"{f.name} corrupted (not ZIP)")
+
             user_part = getattr(req, "user_id", "user")
             unique_name = f"{user_part}_{timestamp}_{f.name}"
-            urls.append(await upload_s3(raw, unique_name))
-            seen.add(sig)
+            # Upload directly from inside the sandbox
+            upload_code = f'''
+                import boto3
+                s3 = boto3.client("s3", region_name="{REGION}")
+                s3.upload_file("{f.path}", "{BUCKET}", "code/{unique_name}")
+            '''
+            print(f"Going to execute s3 upload code for sandbox {req.sandbox_id}")
+            resultupload = await asyncio.to_thread(sb.run_code, upload_code)
+            print(f"Executed s3 upload code for sandbox {req.sandbox_id} with Result {resultupload}")
+            urls.add(f"https://{BUCKET}.s3.{REGION}.amazonaws.com/code/{unique_name}")
 
-            # optional cleanup inside sandbox
+            # Optional: delete file in sandbox 
             await asyncio.to_thread(
                 sb.run_code,
                 f"import pathlib; pathlib.Path('{f.path}').unlink(missing_ok=True)"
             )
+
     except Exception as upload_err:
         print(f"⚠️ Upload error: {upload_err}")
 
@@ -144,7 +148,7 @@ async def execute_code(req: CodeExecutionRequest):
         "sandbox_id": sb.sandbox_id,
         "stdout": "\n".join(result.logs.stdout or []),
         "stderr": "\n".join(result.logs.stderr or []),
-        "file_urls": urls,
+        "file_urls": list(urls),
         "error": {
             "name": result.error.name if result.error else None,
             "message": result.error.value if result.error else None,
@@ -152,6 +156,7 @@ async def execute_code(req: CodeExecutionRequest):
             if result.error and result.error.traceback else None,
         },
     }
+
 
 
 from time import perf_counter  # ⏱️ To measure time precisely
