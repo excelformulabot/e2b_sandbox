@@ -56,8 +56,6 @@ async def create_sandbox(req: CreateSandboxRequest):
     secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
 
     setup_code = f"""
-    !pip install fsspec s3fs
-    
     import os
     os.environ['AWS_ACCESS_KEY_ID'] = '{access_key}'
     os.environ['AWS_SECRET_ACCESS_KEY'] = '{secret_key}'
