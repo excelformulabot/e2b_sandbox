@@ -84,7 +84,23 @@ async def execute_code(req: CodeExecutionRequest):
 
     sb = Sandbox.connect(req.sandbox_id)
     sb.set_timeout(6000)
-    result = await asyncio.to_thread(sb.run_code, req.code)
+    # Step 1: Run the user's code
+    try:
+        result = await asyncio.to_thread(sb.run_code, req.code)
+    except Exception as e:
+        # If the code crashes during execution (not sandbox itself), capture here
+        return {
+            "sandbox_id": req.sandbox_id,
+            "stdout": "",
+            "stderr": "",
+            "file_urls": [],
+            "error": {
+                "name": type(e).__name__,
+                "message": str(e),
+                "traceback": [],
+            }
+        }
+
 
     timestamp = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
 
