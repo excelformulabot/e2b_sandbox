@@ -126,9 +126,12 @@ async def execute_code(req: CodeExecutionRequest):
             unique_name = f"{user_part}_{timestamp}_{f.name}"
             # Upload directly from inside the sandbox
             upload_code = f'''
-                import boto3
-                s3 = boto3.client("s3", region_name="{REGION}")
-                s3.upload_file("{f.path}", "{BUCKET}", "code/{unique_name}")
+            import boto3
+            import mimetypes
+            s3 = boto3.client("s3", region_name="{REGION}")
+            mime, _ = mimetypes.guess_type("{f.name}")
+            extra_args = {{"ContentType": mime}} if mime else {{}}
+            s3.upload_file("{f.path}", "{BUCKET}", "code/{unique_name}", ExtraArgs=extra_args)
             '''
             print(f"Going to execute s3 upload code for sandbox {req.sandbox_id}")
             resultupload = await asyncio.to_thread(sb.run_code, upload_code)
