@@ -133,7 +133,7 @@ async def execute_code(req: CodeExecutionRequest):
             print(f"Going to execute s3 upload code for sandbox {req.sandbox_id}")
             resultupload = await asyncio.to_thread(sb.run_code, upload_code)
             print(f"Executed s3 upload code for sandbox {req.sandbox_id} with Result {resultupload}")
-            urls.add(f"https://{BUCKET}.s3.{REGION}.amazonaws.com/code/{unique_name}")
+            urls.add(f"https://{BUCKET}.s3.{REGION}.amazonaws.com/code/{unique_name}".lower())
 
             # Optional: delete file in sandbox 
             await asyncio.to_thread(
